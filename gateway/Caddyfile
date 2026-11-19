@@ -12,6 +12,15 @@
 		respond "ok" 200
 	}
 
+	# Local diagnostics the API answers only for loopback callers: relayed by the API's helper server
+	# (it checks the caller's Skyvern key itself).
+	@internal path /api/v1/internal/auth/status /api/v1/internal/llms/status
+	handle @internal {
+		@basicint header_regexp Authorization ^Basic\s
+		request_header @basicint -Authorization
+		reverse_proxy {$ARTIFACT_UPSTREAM}
+	}
+
 	# Skyvern REST API and WebSocket streams. The API checks its own key (x-api-key or a
 	# UI session token), so SDK and MCP clients can call it without the gateway login.
 	@api path /api/* /v1/* /v2/*
