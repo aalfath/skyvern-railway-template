@@ -8,7 +8,7 @@
 
 :{$PORT} {
 	# Health check for Railway (no login).
-	handle /gateway-health {
+	handle /healthz {
 		respond "ok" 200
 	}
 
