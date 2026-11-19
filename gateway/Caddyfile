@@ -1,0 +1,42 @@
+{
+	admin off
+	auto_https off
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+:{$PORT} {
+	# Health check for Railway (no login).
+	handle /gateway-health {
+		respond "ok" 200
+	}
+
+	# Skyvern REST API and WebSocket streams. The API checks its own key (x-api-key or a
+	# UI session token), so SDK and MCP clients can call it without the gateway login.
+	@api path /api/* /v1/* /v2/*
+	handle @api {
+		# The browser repeats the gateway's basic-auth header on same-origin calls; the API doesn't need it.
+		@basic header_regexp Authorization ^Basic\s
+		request_header @basic -Authorization
+		reverse_proxy {$API_UPSTREAM} {
+			lb_try_duration 30s
+		}
+	}
+
+	# Everything else (the web UI and the screenshots/recordings it shows) needs the gateway login.
+	handle {
+		basic_auth {
+			{$SKYVERN_USERNAME} {$SKYVERN_PASSWORD_HASH}
+		}
+		@artifact path /artifact/*
+		handle @artifact {
+			reverse_proxy {$ARTIFACT_UPSTREAM}
+		}
+		handle {
+			reverse_proxy {$UI_UPSTREAM} {
+				lb_try_duration 30s
+			}
+		}
+	}
+}
