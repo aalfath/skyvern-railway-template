@@ -9,7 +9,7 @@ One-click Railway template for [Skyvern](https://github.com/Skyvern-AI/skyvern) 
 | Service | Built from | What it does |
 |---|---|---|
 | `Skyvern` | `gateway/` (Caddy 2.11.9) | Public entry point on port 8080. Asks for a username and password before the web UI (Skyvern's UI has no login of its own), routes `/api/*`, `/v1/*`, `/v2/*` and WebSocket streams to the API, and `/artifact/*` to the artifact server. |
-| `skyvern-api` | `api/` (`public.ecr.aws/skyvern/skyvern:v1.0.58`) | Skyvern API, browser (Chromium on Xvfb) and task runner on port 8000. On first start it runs the database migrations and creates the organization and its API key. Also runs a small artifact/bootstrap server on 9090 (private network only). Volume: `/data` (artifacts, recordings, downloads, browser sessions, credential vault, the API key file). |
+| `skyvern-api` | `api/` (`public.ecr.aws/skyvern/skyvern:v1.0.58`) | Skyvern API, browser (Chromium on Xvfb) and task runner on port 8000. On first start it runs the database migrations and creates the organization and its API key. Also runs a small helper server on 9090 (private network only) that serves artifacts, hands the first-start key to the UI, and relays the UI's local diagnostics (`/api/v1/internal/*/status`), which the API answers only for loopback callers. Volume: `/data` (artifacts, recordings, downloads, browser sessions, credential vault, the API key file). |
 | `skyvern-ui` | `ui/` (`public.ecr.aws/skyvern/skyvern-ui:v1.0.58`) | Skyvern web UI on port 8080, private network only. Waits for the API's first-start key, then serves the app. |
 | `Postgres` | Railway's Postgres | Database. Volume: `/var/lib/postgresql/data`. |
 
